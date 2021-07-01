@@ -1,0 +1,122 @@
+function FSecure_TokenProvider($endpoint, $client_id, $client_secret, $http_settings = [])
+{
+	return function () closure ($endpoint, $client_id, $client_secret, $http_settings)
+	{
+		return json_decode(
+			cache ["ttl_function" => function ($data) {
+				$data = json_decode($data);
+				if (is_array($data) and isset($data["expires_in"]))
+					return number($data["expires_in"] / 2);
+				return 30;
+			}] http(
+				$endpoint . "/api/token/v1",
+				$http_settings, [],
+				[
+					"grant_type" => "client_credentials",
+					"audience" => "f-secure-atlant",
+					"client_id" => $client_id,
+					"client_secret" => $client_secret
+				]
+			)
+		);
+	};
+}
+
+function Fsecure_Atlant_Scan($endpoint, $tokenprovider, $scan_settings, $file, $http_settings = [])
+{
+	$token = $tokenprovider();
+	if (!is_array($token) and !isset($token["access_token"]))
+		return ["error" => "No access token"];
+
+	$boundary = uuid();
+	$mime = array_join([
+			"--".$boundary,
+			"Content-Disposition: form-data; name=\"metadata\"",
+			"Content-Type: application/json",
+		], "\r\n")."\r\n\r\n";
+	$mime2 = array_join([
+			"",
+			"--".$boundary,
+			"Content-Disposition: form-data; name=\"data\"",
+			"Content-Type: application/octet-stream",
+		], "\r\n")."\r\n\r\n";
+	$mime3 = "\r\n--".$boundary."--\r\n";
+	$data = [$mime, json_encode($scan_settings), $mime2, $file, $mime3];
+
+	$response = http(
+			$endpoint . "/api/scan/v1",
+			[
+				"response_headers" => true,
+				"extended_result" => true,
+				"headers" => [
+						"Content-type: multipart/form-data; boundary=" . $boundary,
+						"Authorization: Bearer " . $token["access_token"]
+				],
+				...$http_settings
+			],
+			[],
+			function ($size) closure ($data) {
+				while (length($data)) {
+					if (is_string($data[0])) {
+						$x = $data[0][0:$size];
+						$data[0] = $data[0][$size:];
+					} else {
+						$x = $data[0]->read($size);
+					}
+					if ($x !== "")
+						return $x;
+					$data = $data[1:];
+				}
+				return "";
+			}
+		);
+
+	if ($response["status"] != 200 and $response["status"] != 202)
+		return ["error" => "Bad HTTP response from Atlant API"];
+
+	$content = json_decode($response["content"]);
+	if (!$content or !isset($content["status"]))
+		return ["error" => "Bad response from Atlant API"];
+
+	while ($content["status"] == "pending")
+	{
+		$retryAfter = array_find(function($h) closure ($content) {
+			[$name, $value] = $h;
+			return ($name == "retry-after");
+		}, $response["headers"]);
+
+		$location = array_find(function($h) closure ($content) {
+			[$name, $value] = $h;
+			return ($name == "location");
+		}, $response["headers"]);
+
+		if (!$retryAfter or !$location)
+			return ["error" => "Bad pending result from Atlant API"];
+
+		sleep(number($retryAfter["value"]));
+
+		$token = $tokenprovider();
+		if (!is_array($token) and !isset($token["access_token"]))
+			return ["error" => "No access token"];
+
+		$response = http(
+			$endpoint . $location["value"],
+			[
+				"response_headers" => true,
+				"extended_result" => true,
+				"headers" => [
+					"Authorization: Bearer " . $token["access_token"]
+				],
+				...$http_settings
+			]);
+
+		if ($response["status"] != 200 and $response["status"] != 202)
+			return ["error" => "Bad HTTP response from Atlant API"];
+
+		$content = json_decode($response["content"]);
+		if (!$content or !isset($content["status"]))
+			return ["error" => "No response from Atlant API"];
+	}
+
+	return json_decode($response["content"]);	
+}
