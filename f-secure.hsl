@@ -1,4 +1,4 @@
-function FSecure_TokenProvider($endpoint, $client_id, $client_secret, $http_settings = [])
+function fsecure_tokenprovider($endpoint, $client_id, $client_secret, $http_settings = [])
 {
 	return function () closure ($endpoint, $client_id, $client_secret, $http_settings)
 	{
@@ -22,7 +22,7 @@ function FSecure_TokenProvider($endpoint, $client_id, $client_secret, $http_sett
 	};
 }
 
-function Fsecure_Atlant_Scan($endpoint, $tokenprovider, $scan_settings, $file, $http_settings = [])
+function fsecure_atlant_scan($endpoint, $tokenprovider, $scan_settings, $file, $http_settings = [])
 {
 	$token = $tokenprovider();
 	if (!is_array($token) and !isset($token["access_token"]))
