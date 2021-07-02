@@ -1,4 +1,4 @@
-## fsecure_atlant_scan(endpoint, tokenprovider, scan_settings, file, http_settings = [])
+### fsecure_atlant_scan(endpoint, tokenprovider, scan_settings, file, http_settings = [])
 
 Scan a File pointer (file) with F-Secure Anti-virus (using the Atlant API).
 
@@ -12,7 +12,7 @@ Scan a File pointer (file) with F-Secure Anti-virus (using the Atlant API).
 
 **Returns**: an array with ``scan_result`` and optionally ``detections`` (see Atlant API documentation), or an array with an ``error`` (produced by this client).
 
-## fsecure_tokenprovider(endpoint, client_id, client_secret, http_settings = [])
+### fsecure_tokenprovider(endpoint, client_id, client_secret, http_settings = [])
 
 Return a token provider to be used with the `fsecure_atlant_scan` function.
 
