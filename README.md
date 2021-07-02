@@ -5,16 +5,16 @@ Scan a File pointer (file) with F-Secure Anti-virus (using the Atlant API).
 **Params**
 
 - endpoint `string` - the atlant endpoint base URL
-- tokenprovider `function` - the token provider (see fsecure_tokenprovider function)
+- tokenprovider `function` - the token provider (see `fsecure_tokenprovider` function)
 - scan_settings `array` - the atlant API scan settings
 - fp `File` - a file object
-- http_settings `array` - http options (passed to http() function)
+- http_settings `array` - http options (passed to `http` function)
 
 **Returns**: an array with ``scan_result`` and optionally ``detections`` (see Atlant API documentation), or an array with an ``error`` (produced by this client).
 
 ## fsecure_tokenprovider(endpoint, client_id, client_secret, http_settings = [])
 
-Return a token provider to be used with the fsecure_atlant_scan function.
+Return a token provider to be used with the `fsecure_atlant_scan` function.
 
 **Params**
 
