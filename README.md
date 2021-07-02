@@ -8,7 +8,7 @@ Scan a File pointer (file) with F-Secure Anti-virus (using the Atlant API).
 - tokenprovider `function` - the token provider (see `fsecure_tokenprovider` function)
 - scan_settings `array` - the atlant API scan settings
 - fp `File` - a file object
-- http_settings `array` - http options (passed to `http` function)
+- http_settings `array` - the http options (passed to `http` function)
 
 **Returns**: an array with ``scan_result`` and optionally ``detections`` (see Atlant API documentation), or an array with an ``error`` (produced by this client).
 
@@ -21,9 +21,9 @@ Return a token provider to be used with the `fsecure_atlant_scan` function.
 - endpoint `string` - the authorization endpoint base URL
 - client_id `string` - the client id
 - client_secret `string` - the client secret
-- http_settings `array` - http options (passed to http() function)
+- http_settings `array` - the http options (passed to `http` function)
 
-## Example
+### Example
 
 The following sample will trigger the EICAR detection.
 
